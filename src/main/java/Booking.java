@@ -1,13 +1,14 @@
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.LinkedHashMap;
 
 public class Booking {
-    private int id;
+    private Integer id;
     private BookingStateBase state;
     private String employeeName;
     private String date;
     private String cancellationReason;
-
+    private static LinkedHashMap<Integer, Booking> list = new LinkedHashMap<>();
 
     private Booking(int id, String employeeName, BookingStateBase state) {
         this.id = id;
@@ -17,7 +18,7 @@ public class Booking {
         this.date = simpleDateFormat.format(new Date(System.currentTimeMillis()));
     }
 
-    public static Booking CreateNew(int id, String employeeName) {
+    public static Booking CreateNew(Integer id, String employeeName) {
         Booking booking = new Booking(
                 id,
                 employeeName,
@@ -26,26 +27,38 @@ public class Booking {
         return booking;
     }
 
+    public static void addToList(Booking booking) {
+        list.put(booking.getId(), booking);
+    }
+
+    public static void deleteFromList(Booking booking) {
+        list.remove(booking.getId(), booking);
+    }
+
     protected void TransitionToState(BookingStateBase newState) {
         this.state = newState;
         this.state.EnterState(this);
     }
 
     public void Accept() {
-        this.state.Accept(this);
+        if (this.cancellationReason == null) {
+            addToList(this);
+            this.state.Accept(this);
+        }
     }
 
     public void Cancel(String cancellationReason) {
+        deleteFromList(this);
         this.state.Cancel(this, cancellationReason);
     }
 
 
     //Getters and setters
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
@@ -79,5 +92,20 @@ public class Booking {
 
     public void setCancellationReason(String cancellationReason) {
         this.cancellationReason = cancellationReason;
+    }
+
+    public static LinkedHashMap<Integer, Booking> getList() {
+        return list;
+    }
+
+    @Override
+    public String toString() {
+        return " Booking {" +
+                "id=" + id +
+                ", state=" + state +
+                ", employeeName='" + employeeName + '\'' +
+                ", date='" + date + '\'' +
+                (cancellationReason == null ? "" : (", cancellationReason='" + cancellationReason+ '\''))  +
+                '}' + "\n";
     }
 }
